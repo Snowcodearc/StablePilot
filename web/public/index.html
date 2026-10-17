@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>StablePilot — USDC allocation and payment policy</title>
+    <meta
+      name="description"
+      content="Plan a USDC allocation across spending, savings and emergency reserve, check payments against your own policy rules, and prepare unsigned payment proposals for PayBox."
+    />
+    <meta name="color-scheme" content="light" />
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/components.css" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <div class="app">
+      <aside class="sidebar" id="sidebar" aria-label="Primary">
+        <div class="brand">
+          <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path
+              d="M4 15.5 9.5 10l3.5 3.5L20 6.5"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <circle cx="9.5" cy="10" r="1.6" fill="currentColor" />
+          </svg>
+          <span class="brand-name">StablePilot</span>
+        </div>
+
+        <nav class="nav" aria-label="Sections">
+          <a class="nav-item" href="/" data-route="/">
+            <span class="nav-dot" aria-hidden="true"></span>Overview
+          </a>
+          <a class="nav-item" href="/planner" data-route="/planner">
+            <span class="nav-dot" aria-hidden="true"></span>Allocation Planner
+          </a>
+          <a class="nav-item" href="/checker" data-route="/checker">
+            <span class="nav-dot" aria-hidden="true"></span>Payment Checker
+          </a>
+          <a class="nav-item" href="/proposals" data-route="/proposals">
+            <span class="nav-dot" aria-hidden="true"></span>Payment Proposals
+          </a>
+          <a class="nav-item" href="/activity" data-route="/activity">
+            <span class="nav-dot" aria-hidden="true"></span>Activity History
+          </a>
+          <a class="nav-item" href="/settings" data-route="/settings">
+            <span class="nav-dot" aria-hidden="true"></span>Settings
+          </a>
+        </nav>
+
+        <div class="sidebar-foot">
+          <div class="plugin-chip" id="plugin-chip">
+            <span class="plugin-dot" aria-hidden="true"></span>
+            <span class="plugin-text">Connecting to plugin</span>
+          </div>
+          <p class="sidebar-note">
+            Figures you enter are your own. No wallet is connected and no on-chain balance is read.
+          </p>
+        </div>
+      </aside>
+
+      <div class="scrim" id="scrim" hidden></div>
+
+      <div class="main-column">
+        <header class="topbar">
+          <button
+            class="icon-button menu-button"
+            id="menu-button"
+            type="button"
+            aria-label="Open navigation"
+            aria-expanded="false"
+            aria-controls="sidebar"
+          >
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+              <path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+            </svg>
+          </button>
+          <div class="topbar-brand">
+            <span class="topbar-mark" aria-hidden="true"></span>
+            StablePilot
+          </div>
+          <div class="topbar-spacer"></div>
+          <span class="mode-chip" title="Every figure on this screen is typed in by you">Manual figures</span>
+        </header>
+
+        <main class="main" id="main" tabindex="-1">
+          <div class="route-loading" id="route-loading" hidden>
+            <span class="spinner" aria-hidden="true"></span>
+            <span>Loading…</span>
+          </div>
+          <div id="view"></div>
+        </main>
+
+        <footer class="footer">
+          <p>
+            StablePilot plans and checks figures that you supply. It does not hold keys, move funds, or read a wallet.
+            Payments are authorised by PayBox, not here.
+          </p>
+        </footer>
+      </div>
+    </div>
+
+    <div class="toast-stack" id="toasts" role="status" aria-live="polite"></div>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

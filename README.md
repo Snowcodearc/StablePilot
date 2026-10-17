@@ -309,3 +309,17 @@ These mean different things and the plugin keeps them apart:
 MIT (see [`LICENSE`](./LICENSE)). The PayBox plugin starter files this project builds on are
 redistributed as published; the requirement document does not state licence terms for them, and none
 are claimed here.
+
+## 13. Web interface (optional)
+
+[`web/`](./web/README.md) is a local dashboard for demoing and testing the plugin. It drives the real
+`dist/plugin.mjs` over MCP stdio: every figure on screen comes from a genuine `tools/call`.
+
+```bash
+pnpm run build      # if dist/plugin.mjs is not there yet
+pnpm run web:dev    # http://127.0.0.1:4173
+pnpm run web:test   # 14 end-to-end checks against the real plugin
+```
+
+It is a separate deliverable: not bundled into the plugin, not covered by the PayBox conformance run,
+and not required for the submission. Upload `dist/plugin.mjs` as always.
