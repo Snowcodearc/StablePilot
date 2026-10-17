@@ -1,0 +1,21 @@
+# Byte-exact checkouts.
+#
+# This repository documents SHA-256 hashes in two places: the 11 adopted starter
+# files are verified against `.paybox-starter/manifest.json`, and
+# `SUBMISSION.md` quotes the hash of the bundled artifact. Git's default
+# `core.autocrlf` behaviour on Windows would rewrite line endings on checkout and
+# silently change those bytes, so every file is forced to LF and the artifact is
+# excluded from conversion entirely.
+* text=auto eol=lf
+
+# The artifact is a build output whose hash is published, not source. It is kept
+# out of line-ending conversion so the committed bytes are exactly the built
+# bytes.
+dist/plugin.mjs -text
+
+# Real binaries, should any ever be added.
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff binary
+*.woff2 binary

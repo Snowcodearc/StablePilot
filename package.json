@@ -1,0 +1,39 @@
+{
+  "name": "stablepilot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "StablePilot: an AI stablecoin allocation and payment assistant for PayBox.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": "24.x",
+    "pnpm": "11.11.0"
+  },
+  "packageManager": "pnpm@11.11.0",
+  "scripts": {
+    "dev": "tsx src/plugin.ts",
+    "build": "esbuild src/plugin.ts --bundle --platform=node --format=esm --target=node24 --minify --outfile=dist/plugin.mjs",
+    "typecheck": "tsc --noEmit",
+    "typecheck:tests": "tsc --noEmit -p tsconfig.tests.json",
+    "test:unit": "node --import tsx --test tests/allocation.test.ts tests/policy.test.ts tests/payment.test.ts tests/report.test.ts tests/requirements.test.ts",
+    "test:protocol": "node --import tsx --test tests/protocol.test.ts",
+    "conformance": "node scripts/conformance.mjs",
+    "conformance:windows": "node scripts/conformance-windows.mjs",
+    "verify": "pnpm run verify:starter && pnpm run typecheck && pnpm run typecheck:tests && pnpm run test:unit && pnpm run test:protocol && pnpm run build && pnpm run conformance:windows",
+    "verify:starter": "node scripts/verify-starter-files.mjs",
+    "probe": "node scripts/probe-protocol.mjs",
+    "probe:isolated": "node scripts/probe-isolated.mjs",
+    "test": "node scripts/test.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "2.0.0",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "24.12.2",
+    "esbuild": "0.28.2",
+    "tsx": "4.23.12",
+    "typescript": "5.9.3",
+    "ajv": "8.20.0"
+  }
+}

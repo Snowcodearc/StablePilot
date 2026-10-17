@@ -1,0 +1,32 @@
+# Dependencies are installed, never committed.
+node_modules/
+.pnpm-store/
+
+# Build output is reproducible from source, with one deliberate exception: the
+# bundled artifact is the exact file the PayBox developer portal expects, and
+# SUBMISSION.md quotes its SHA-256. Committing it lets anyone verify that hash
+# against the repository instead of trusting a local build.
+dist/*
+!dist/plugin.mjs
+
+# Local verification scratch space.
+.tmp/
+*.tsbuildinfo
+
+# Secrets and local configuration. Nothing here should ever be needed: the
+# plugin reads no environment variables and no files at runtime.
+.env
+.env.*
+*.pem
+*.key
+*.p12
+secrets*.json
+
+# Editor and OS noise.
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+pnpm-debug.log*

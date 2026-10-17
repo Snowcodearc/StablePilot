@@ -1,0 +1,9 @@
+{
+  "tool": "plan_stablecoin_allocation",
+  "arguments": {
+    "totalUsdc": "100",
+    "spendingUsdc": "10",
+    "savingsUsdc": "70",
+    "emergencyReserveUsdc": "20"
+  }
+}
