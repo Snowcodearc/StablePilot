@@ -11,7 +11,7 @@
 import { createServer } from "node:http";
 import { readFile, stat } from "node:fs/promises";
 import { extname, join, normalize, resolve, sep } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import {
   CALL_TIMEOUT_MS,
@@ -61,6 +61,15 @@ function sendJson(res, status, payload) {
 }
 
 async function readBody(req) {
+  // Vercel's Node runtime may hand the function an already-parsed body. Local
+  // `node web/server/index.mjs` uses the raw stream. Support both so the same
+  // handler works in a long-lived process and in a serverless function.
+  if (req.body !== undefined) {
+    if (Buffer.isBuffer(req.body)) return JSON.parse(req.body.toString("utf8") || "{}");
+    if (typeof req.body === "string") return req.body ? JSON.parse(req.body) : {};
+    return req.body ?? {};
+  }
+
   const chunks = [];
   let size = 0;
   for await (const chunk of req) {
@@ -171,7 +180,7 @@ async function handleToolCall(res, toolName, body) {
 // Server
 // ---------------------------------------------------------------------------
 
-const server = createServer(async (req, res) => {
+export async function handler(req, res) {
   const url = req.url ?? "/";
   const path = url.split("?")[0];
 
@@ -216,22 +225,31 @@ const server = createServer(async (req, res) => {
     log(`error ${message}`);
     return sendJson(res, 500, { ok: false, code: "server_error", error: message });
   }
-});
-
-// Refuse to start with a missing or unbuilt artifact rather than failing on the
-// first tool call, and say exactly what to run.
-const artifactInfo = await stat(artifact).catch(() => null);
-if (!artifactInfo) {
-  process.stderr.write(
-    `StablePilot web: the plugin bundle was not found at\n  ${artifact}\n` +
-      `Build it first:\n  pnpm run build\n`,
-  );
-  process.exit(1);
 }
 
-server.listen(port, host, () => {
-  const bound = server.address().port;
-  log(`listening on http://${host}:${bound}`);
-  log(`plugin artifact ${artifact} (${artifactInfo.size} bytes)`);
-  log(`per-call timeout ${CALL_TIMEOUT_MS}ms`);
-});
+const server = createServer(handler);
+
+// `api/[...path].mjs` imports this module on Vercel and must not open a port.
+// Only start the long-lived server when this file is run directly.
+const isDirectRun =
+  Boolean(process.argv[1]) && import.meta.url === pathToFileURL(resolve(process.argv[1])).href;
+
+if (isDirectRun) {
+  // Refuse to start with a missing or unbuilt artifact rather than failing on
+  // the first tool call, and say exactly what to run.
+  const artifactInfo = await stat(artifact).catch(() => null);
+  if (!artifactInfo) {
+    process.stderr.write(
+      `StablePilot web: the plugin bundle was not found at\n  ${artifact}\n` +
+        `Build it first:\n  pnpm run build\n`,
+    );
+    process.exit(1);
+  }
+
+  server.listen(port, host, () => {
+    const bound = server.address().port;
+    log(`listening on http://${host}:${bound}`);
+    log(`plugin artifact ${artifact} (${artifactInfo.size} bytes)`);
+    log(`per-call timeout ${CALL_TIMEOUT_MS}ms`);
+  });
+}

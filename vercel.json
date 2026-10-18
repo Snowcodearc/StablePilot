@@ -1,0 +1,38 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "pnpm run build",
+  "outputDirectory": "web/public",
+  "functions": {
+    "api/[...path].mjs": {
+      "includeFiles": "dist/plugin.mjs",
+      "maxDuration": 30
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/planner",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/checker",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/simulator",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/proposals",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/activity",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/settings",
+      "destination": "/index.html"
+    }
+  ]
+}

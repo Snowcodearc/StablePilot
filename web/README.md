@@ -139,9 +139,14 @@ The interface is not a static site. It needs the Node process above, because the
 plugin is a stdio MCP server and only that process can spawn it.
 
 - **Local demo / screen recording:** `pnpm run web:dev`, as above.
-- **Hosted:** any Node 24 host that can run a long-lived process, with
-  `pnpm run build` in the build step so `dist/plugin.mjs` exists. Set `HOST=0.0.0.0`
-  and the platform's `PORT`.
+- **Hosted (long-lived process):** any Node 24 host, with `pnpm run build` in the
+  build step so `dist/plugin.mjs` exists. Set `HOST=0.0.0.0` and the platform's
+  `PORT`.
+- **Vercel Functions:** the checked-in `vercel.json` builds the plugin, serves
+  `web/public` as the static output, and routes `/api/*` to
+  `api/[...path].mjs`, which imports the same request handler. The function
+  bundle includes `dist/plugin.mjs` so each call can still spawn the real plugin
+  over MCP stdio. No dashboard output-directory override is needed.
 - **Static hosting (Vercel static output, GitHub Pages, Netlify drop):** not
   possible. There is no HTTP MCP entry point and no build output to serve; a
   static host would serve the shell, and every tool call would fail.
