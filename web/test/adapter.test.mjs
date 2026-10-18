@@ -13,6 +13,7 @@ import { after, before, describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { TOOL as SPLIT_TOOL, planPayload, splitAmount } from "../public/lib/split.js";
 
 const serverEntry = fileURLToPath(new URL("../server/index.mjs", import.meta.url));
 
@@ -161,6 +162,56 @@ describe("plan_stablecoin_allocation", () => {
   it("refuses a malformed amount", async () => {
     const { payload } = await call("plan_stablecoin_allocation", { ...PLAN_ARGS, totalUsdc: "1,000" });
     assert.equal(payload.result.isError, true);
+  });
+});
+
+describe("smart split", () => {
+  it("sends the panel's own payload to plan_stablecoin_allocation", async () => {
+    assert.equal(SPLIT_TOOL, "plan_stablecoin_allocation");
+
+    const { status, payload } = await call(SPLIT_TOOL, planPayload(splitAmount("1000")));
+    assert.equal(status, 200);
+    assert.equal(payload.result.isError, undefined);
+
+    const plan = payload.result.structuredContent.plan;
+    assert.equal(plan.totalAllocatedUsdc, "1000");
+    assert.equal(plan.unallocatedUsdc, "0");
+    assert.deepEqual(plan.percentages, {
+      spending: "30.00",
+      savings: "50.00",
+      emergencyReserve: "20.00",
+      allocated: "100.00",
+      unallocated: "0.00",
+    });
+    assert.equal(typeof payload.result.structuredContent.explanation, "string");
+  });
+
+  it("gets 30/50/20 back for the minimum, a mid amount and a decimal", async () => {
+    for (const input of ["100", "250", "123.45"]) {
+      const { payload } = await call(SPLIT_TOOL, planPayload(splitAmount(input)));
+      const plan = payload.result.structuredContent.plan;
+      assert.equal(plan.totalAllocatedUsdc, input, `${input} total`);
+      assert.equal(plan.unallocatedUsdc, "0", `${input} unallocated`);
+      assert.equal(plan.percentages.spending, "30.00", `${input} spending`);
+      assert.equal(plan.percentages.savings, "50.00", `${input} savings`);
+      assert.equal(plan.percentages.emergencyReserve, "20.00", `${input} reserve`);
+    }
+  });
+
+  it("reconciles the plugin's own figures for an amount that does not divide evenly", async () => {
+    const { payload } = await call(SPLIT_TOOL, planPayload(splitAmount("100.000001")));
+    const plan = payload.result.structuredContent.plan;
+
+    if (payload.result.isError) {
+      // A refusal is acceptable only if it is explicit; it must never look like a plan.
+      assert.match(payload.result.content[0].text, /error|allocat/i);
+      return;
+    }
+
+    assert.equal(plan.unallocatedUsdc, "0");
+    const sum =
+      Number(plan.spendingUsdc) + Number(plan.savingsUsdc) + Number(plan.emergencyReserveUsdc);
+    assert.ok(Math.abs(sum - 100.000001) < 1e-9, `summed to ${sum}`);
   });
 });
 

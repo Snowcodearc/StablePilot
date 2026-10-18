@@ -16,6 +16,7 @@ import {
 } from "../components/ui.js";
 import { esc, icons } from "../lib/dom.js";
 import { money, relative } from "../lib/format.js";
+import { mountSmartSplit } from "../components/smart-split.js";
 import {
   getActivity,
   getSettings,
@@ -193,9 +194,7 @@ function errorPanel(message, { hint } = {}) {
 }
 
 export async function render(root) {
-  const settings = getSettings();
-  const activity = getActivity().slice(0, 5);
-  const ready = hasPlanFigures(settings);
+  const ready = hasPlanFigures(getSettings());
 
   const actions = `
     <a class="button" href="/planner">${ready ? "Edit figures" : "Start a plan"}</a>
@@ -207,96 +206,110 @@ export async function render(root) {
       "Where your USDC is earmarked, calculated by the StablePilot plugin from the figures you entered.",
       actions,
     )}
-    <div class="stack" id="overview-body"></div>`;
+    <div class="stack">
+      <div id="smart-split-host"></div>
+      <div class="stack" id="overview-body"></div>
+    </div>`;
 
   const body = root.querySelector("#overview-body");
+  /**
+   * Renders the panels below Smart Split from the figures currently stored in
+   * this browser. Called on first paint and again after Smart Split saves a
+   * plan, so the two halves of the page never disagree.
+   */
+  async function loadPanels() {
+    const settings = getSettings();
+    const activity = getActivity().slice(0, 5);
 
-  if (!ready) {
+    if (!hasPlanFigures(settings)) {
+      body.innerHTML = `
+        <section class="panel">
+          ${emptyState({
+            title: "No saved plan from the planner yet",
+            body: "Smart Split above generates a plan in one step. The planner is for setting each amount yourself and comparing it with a savings goal.",
+            action: `<a class="button" href="/planner">Open the planner</a>`,
+          })}
+        </section>
+        <div class="split">
+          <section class="panel">
+            <div class="panel-head"><h2 class="panel-title">Quick actions</h2></div>
+            <div class="panel-body tight">${QUICK_ACTIONS}</div>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><h2 class="panel-title">Recent activity</h2></div>
+            <div class="panel-body">${recentActivity(activity)}</div>
+          </section>
+        </div>`;
+      return;
+    }
+
     body.innerHTML = `
-      <section class="panel">
-        ${emptyState({
-          title: "No plan yet",
-          body: "Enter a total balance and how much to earmark for spending, savings and an emergency reserve. StablePilot returns the split, the percentages and whether your savings goal is met.",
-          action: `<a class="button button-primary" href="/planner">Plan an allocation</a>`,
+      <div class="split">
+        <div class="skeleton" style="height:320px"></div>
+        <div class="skeleton" style="height:320px"></div>
+      </div>`;
+
+    const [planCall, reportCall] = await Promise.allSettled([
+      callTool("plan_stablecoin_allocation", planArguments(settings)),
+      callTool("get_allocation_report", reportArguments(settings)),
+    ]);
+
+    const planResult = planCall.status === "fulfilled" ? planCall.value : null;
+    const toolError = planResult?.result?.isError === true;
+    const plan = planResult?.result?.structuredContent?.plan;
+
+    if (!planResult || toolError || !plan) {
+      const message =
+        planResult?.result?.content?.[0]?.text ??
+        (planCall.status === "rejected" ? planCall.reason?.message : "The tool returned no plan.");
+      body.innerHTML = `
+        ${errorPanel(message, {
+          hint: "The figures are stored in this browser. Open the planner to correct them.",
         })}
-      </section>
-      <div class="split">
-        <section class="panel">
-          <div class="panel-head"><h2 class="panel-title">Quick actions</h2></div>
-          <div class="panel-body tight">${QUICK_ACTIONS}</div>
-        </section>
-        <section class="panel">
-          <div class="panel-head"><h2 class="panel-title">Recent activity</h2></div>
-          <div class="panel-body">${recentActivity(activity)}</div>
-        </section>
-      </div>`;
-    return;
-  }
+        <div class="split">
+          <section class="panel">
+            <div class="panel-head"><h2 class="panel-title">Quick actions</h2></div>
+            <div class="panel-body tight">${QUICK_ACTIONS}</div>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><h2 class="panel-title">Recent activity</h2></div>
+            <div class="panel-body">${recentActivity(activity)}</div>
+          </section>
+        </div>`;
 
-  body.innerHTML = `
-    <div class="split">
-      <div class="skeleton" style="height:320px"></div>
-      <div class="skeleton" style="height:320px"></div>
-    </div>`;
+      body.querySelector("[data-retry]")?.addEventListener("click", () => loadPanels());
+      return;
+    }
 
-  const [planCall, reportCall] = await Promise.allSettled([
-    callTool("plan_stablecoin_allocation", planArguments(settings)),
-    callTool("get_allocation_report", reportArguments(settings)),
-  ]);
+    const report =
+      reportCall.status === "fulfilled" ? reportCall.value?.result?.structuredContent?.report : null;
 
-  const planResult = planCall.status === "fulfilled" ? planCall.value : null;
-  const toolError = planResult?.result?.isError === true;
-  const plan = planResult?.result?.structuredContent?.plan;
+    setLastPlan({ at: new Date().toISOString(), plan });
+    if (report) setLastReport({ at: new Date().toISOString(), report });
 
-  if (!planResult || toolError || !plan) {
-    const message =
-      planResult?.result?.content?.[0]?.text ??
-      (planCall.status === "rejected" ? planCall.reason?.message : "The tool returned no plan.");
     body.innerHTML = `
-      ${errorPanel(message, {
-        hint: "The figures are stored in this browser. Open the planner to correct them.",
-      })}
+      <div class="split results-enter">
+        ${planPanel(plan)}
+        ${sharePanel(plan, report)}
+      </div>
       <div class="split">
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title">Recent activity</h2>
+              <p class="panel-sub">Saved in this browser, not on-chain history</p>
+            </div>
+            <a class="button-link" href="/activity">View all</a>
+          </div>
+          <div class="panel-body">${recentActivity(activity)}</div>
+        </section>
         <section class="panel">
           <div class="panel-head"><h2 class="panel-title">Quick actions</h2></div>
           <div class="panel-body tight">${QUICK_ACTIONS}</div>
         </section>
-        <section class="panel">
-          <div class="panel-head"><h2 class="panel-title">Recent activity</h2></div>
-          <div class="panel-body">${recentActivity(activity)}</div>
-        </section>
       </div>`;
-
-    body.querySelector("[data-retry]")?.addEventListener("click", () => render(root));
-    return;
   }
 
-  const report =
-    reportCall.status === "fulfilled" ? reportCall.value?.result?.structuredContent?.report : null;
-
-  setLastPlan({ at: new Date().toISOString(), plan });
-  if (report) setLastReport({ at: new Date().toISOString(), report });
-
-  body.innerHTML = `
-    <div class="split results-enter">
-      ${planPanel(plan)}
-      ${sharePanel(plan, report)}
-    </div>
-    <div class="split">
-      <section class="panel">
-        <div class="panel-head">
-          <div>
-            <h2 class="panel-title">Recent activity</h2>
-            <p class="panel-sub">Saved in this browser, not on-chain history</p>
-          </div>
-          <a class="button-link" href="/activity">View all</a>
-        </div>
-        <div class="panel-body">${recentActivity(activity)}</div>
-      </section>
-      <section class="panel">
-        <div class="panel-head"><h2 class="panel-title">Quick actions</h2></div>
-        <div class="panel-body tight">${QUICK_ACTIONS}</div>
-      </section>
-    </div>`;
-
+  mountSmartSplit(root.querySelector("#smart-split-host"), { onPlan: loadPanels });
+  await loadPanels();
 }

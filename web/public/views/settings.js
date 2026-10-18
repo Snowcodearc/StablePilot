@@ -196,7 +196,7 @@ async function fillAbout(body) {
       <div class="kv">
         <div class="kv-row">
           <div class="kv-key">Artifact</div>
-          <div class="kv-value mono" style="word-break:break-all">${esc(info.artifact.path)}</div>
+          <div class="kv-value mono" title="${esc(info.artifact.path)}">${esc(shortPath(info.artifact.path))}</div>
         </div>
         <div class="kv-row">
           <div class="kv-key">Size</div>
@@ -226,4 +226,9 @@ async function fillAbout(body) {
       `${esc(error?.message ?? String(error))}. Check that the backend and the plugin artifact are present.`,
     );
   }
+}
+
+/** "C:\Users\…\StablePilot\dist\plugin.mjs" -> "dist/plugin.mjs" */
+function shortPath(value) {
+  return String(value).split(/[\\/]/).filter(Boolean).slice(-2).join("/");
 }

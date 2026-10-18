@@ -318,7 +318,7 @@ are claimed here.
 ```bash
 pnpm run build      # if dist/plugin.mjs is not there yet
 pnpm run web:dev    # http://127.0.0.1:4173
-pnpm run web:test   # 14 end-to-end checks against the real plugin
+pnpm run web:test   # 51 checks: real stdio calls, payload mapping, view states, copy safety
 ```
 
 It is a separate deliverable: not bundled into the plugin, not covered by the PayBox conformance run,

@@ -332,8 +332,9 @@
 .ledger .total-row td {
   border-top: 1px solid var(--rule-strong);
   border-bottom: 0;
-  background: var(--surface-sunk);
+  background: transparent;
   font-weight: 600;
+  color: var(--ink-soft);
 }
 
 /* --------------------------------------------------------------- badges --- */
@@ -1032,11 +1033,13 @@
   }
 
   .legend-item {
-    grid-template-columns: 10px minmax(0, 1fr) auto;
+    grid-template-columns: 10px minmax(0, 1fr) auto auto;
+    gap: 8px;
   }
 
   .legend-pct {
-    display: none;
+    min-width: 44px;
+    font-size: 0.75rem;
   }
 
   .kv-row {

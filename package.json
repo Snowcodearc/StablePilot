@@ -25,7 +25,7 @@
     "probe:isolated": "node scripts/probe-isolated.mjs",
     "test": "node scripts/test.mjs",
     "web:dev": "node web/server/index.mjs",
-    "web:test": "node --test web/test/adapter.test.mjs"
+    "web:test": "node --test \"web/test/*.test.mjs\""
   },
   "dependencies": {
     "@modelcontextprotocol/server": "2.0.0",

@@ -18,6 +18,7 @@ export const defaultSettings = {
   recipient: "",
   chain: "base",
   explain: true,
+  smartSplitAmount: "",
 };
 
 function blank() {

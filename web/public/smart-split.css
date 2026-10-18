@@ -1,0 +1,450 @@
+/* Smart Split
+   A single panel that owns the top of Overview: the amount input on the left,
+   the live split on the right, and the plugin's confirmation underneath.
+   Uses the shared tokens in styles.css; no new colours are introduced. */
+
+.smart-split {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+  padding: 26px 26px 24px;
+  display: grid;
+  gap: 22px;
+}
+
+.smart-split-copy {
+  display: grid;
+  gap: 6px;
+  max-width: 62ch;
+}
+
+.smart-split-title {
+  margin: 0;
+  font-size: var(--step-4);
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+}
+
+.smart-split-lead {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: var(--step-0);
+  line-height: 1.55;
+}
+
+.smart-split-body {
+  display: grid;
+  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+  gap: 26px;
+  align-items: start;
+  border-top: 1px solid var(--rule);
+  padding-top: 22px;
+}
+
+.smart-split-form {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  min-width: 0;
+}
+
+.amount-hero {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  min-width: 0;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.amount-hero:focus-within {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(15, 111, 99, 0.14);
+}
+
+.amount-hero-input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  padding: 2px 0;
+}
+
+.amount-hero-input::placeholder {
+  color: #b6c3cc;
+  font-weight: 500;
+}
+
+.amount-hero-input:focus {
+  outline: none;
+}
+
+.amount-hero-input[aria-invalid="true"] {
+  color: var(--block);
+}
+
+.amount-hero:has(.amount-hero-input[aria-invalid="true"]) {
+  border-color: var(--block);
+  box-shadow: 0 0 0 3px rgba(163, 43, 43, 0.12);
+}
+
+.amount-hero-unit {
+  font-size: var(--step-0);
+  font-weight: 600;
+  color: var(--ink-faint);
+  letter-spacing: 0.04em;
+}
+
+.smart-split-submit {
+  margin-top: 8px;
+  justify-content: center;
+}
+
+.smart-split-note {
+  margin: 2px 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--ink-faint);
+}
+
+.smart-split-preview {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.smart-preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.smart-bar {
+  display: flex;
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--surface-sunk);
+  gap: 2px;
+}
+
+.smart-bar-seg {
+  height: 100%;
+  transition: width 320ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.smart-bar-seg[data-cat="spending"] {
+  background: var(--spending);
+  border-radius: 999px 0 0 999px;
+}
+
+.smart-bar-seg[data-cat="savings"] {
+  background: var(--savings);
+}
+
+.smart-bar-seg[data-cat="reserve"] {
+  background: var(--reserve);
+  border-radius: 0 999px 999px 0;
+}
+
+.smart-bar.is-muted .smart-bar-seg {
+  opacity: 0.22;
+}
+
+.alloc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.alloc-card {
+  display: grid;
+  grid-template-rows: 1fr auto auto;
+  gap: 4px;
+  padding: 12px 13px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface);
+  min-width: 0;
+}
+
+.alloc-card[data-cat="spending"] {
+  background: #f3f8f6;
+}
+
+.alloc-card[data-cat="savings"] {
+  background: #f2f5f9;
+}
+
+.alloc-card[data-cat="reserve"] {
+  background: #fbf6ee;
+}
+
+.alloc-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.alloc-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.alloc-card[data-cat="spending"] .alloc-dot {
+  background: var(--spending);
+}
+
+.alloc-card[data-cat="savings"] .alloc-dot {
+  background: var(--savings);
+}
+
+.alloc-card[data-cat="reserve"] .alloc-dot {
+  background: var(--reserve);
+}
+
+.alloc-name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.3;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.alloc-figure {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 0;
+}
+
+.alloc-pct {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+  flex: none;
+}
+
+.alloc-amount {
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.alloc-unit {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink-faint);
+  margin-left: 3px;
+  letter-spacing: 0.03em;
+}
+
+.alloc-blurb {
+  font-size: 0.75rem;
+  color: var(--ink-faint);
+  line-height: 1.4;
+}
+
+.alloc-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--rule);
+  font-size: var(--step-0);
+}
+
+.alloc-total strong {
+  font-size: var(--step-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.alloc-foot {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+
+.alloc-flag {
+  color: var(--review);
+}
+
+.smart-split-result:empty {
+  display: none;
+}
+
+.plan-pending {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface-sunk);
+  color: var(--ink-soft);
+  font-size: var(--step-0);
+}
+
+.plan-done {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #cfe5db;
+  border-radius: var(--radius);
+  background: var(--allow-wash);
+}
+
+.plan-done-mark {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--allow);
+  color: #fff;
+}
+
+.plan-done-mark svg {
+  width: 15px;
+  height: 15px;
+}
+
+.plan-done-body {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.plan-done-title {
+  margin: 0;
+  font-weight: 600;
+  font-size: var(--step-1);
+  color: #0a5540;
+}
+
+.plan-done-text {
+  margin: 0;
+  font-size: var(--step-0);
+  color: #1d5c47;
+  line-height: 1.55;
+}
+
+.plan-done-figures {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 2px 0;
+}
+
+.plan-done-figures dt {
+  font-size: 0.75rem;
+  color: #3f6d5b;
+}
+
+.plan-done-figures dd {
+  margin: 2px 0 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.plan-done-note summary {
+  cursor: pointer;
+  font-size: 0.8125rem;
+  color: #2f6a55;
+}
+
+.plan-done-note p {
+  margin: 6px 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: #1d5c47;
+  white-space: pre-wrap;
+}
+
+.plan-done-fineprint {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: #3f6d5b;
+}
+
+.alert-detail {
+  margin: 4px 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1100px) {
+  .smart-split-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .smart-split {
+    padding: 20px 16px;
+    border-radius: var(--radius);
+  }
+
+  .amount-hero-input {
+    font-size: 1.75rem;
+  }
+
+  .alloc-list {
+    gap: 6px;
+  }
+
+  .alloc-card {
+    padding: 10px 8px;
+  }
+
+  .alloc-blurb,
+  .alloc-pct {
+    display: none;
+  }
+
+  .alloc-amount {
+    font-size: 1rem;
+  }
+
+  .plan-done {
+    flex-direction: column;
+  }
+
+  .plan-done-figures {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .smart-bar-seg {
+    transition: none;
+  }
+}
