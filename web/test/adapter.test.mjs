@@ -14,6 +14,7 @@ import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { TOOL as SPLIT_TOOL, planPayload, splitAmount } from "../public/lib/split.js";
+import { runSimulation } from "../public/lib/simulate.js";
 
 const serverEntry = fileURLToPath(new URL("../server/index.mjs", import.meta.url));
 
@@ -294,6 +295,65 @@ describe("propose_usdc_payment", () => {
   });
 });
 
+describe("what-if simulator", () => {
+  const values = {
+    purchaseAmountUsdc: "150",
+    description: "Headphones",
+    availableUsdc: "1000",
+    spendingUsdc: "300",
+    savingsUsdc: "500",
+    emergencyReserveUsdc: "200",
+    savingsGoalUsdc: "600",
+    maxPaymentUsdc: "200",
+    minEmergencyReserveUsdc: "",
+  };
+
+  const invoke = async (name, args) => {
+    const { payload } = await call(name, args);
+    return { result: payload.result, durationMs: payload.durationMs };
+  };
+
+  it("plans and checks a hypothetical purchase through the real plugin", async () => {
+    const outcome = await runSimulation(values, invoke);
+
+    assert.equal(outcome.status, "ok", outcome.message ?? outcome.error?.message);
+    assert.equal(outcome.decision, "allowed");
+    assert.equal(outcome.plan.spendingUsdc, "300");
+    assert.equal(outcome.policy.paymentAmountUsdc, "150");
+    assert.equal(outcome.preview.balanceAfter, "850");
+    assert.equal(outcome.plan.savingsGoal.shortfallUsdc, "100");
+  });
+
+  it("keeps the plugin's blocked result blocked", async () => {
+    const outcome = await runSimulation({ ...values, purchaseAmountUsdc: "350" }, invoke);
+
+    assert.equal(outcome.status, "ok");
+    assert.equal(outcome.decision, "blocked");
+    assert.ok(outcome.policy.blockedBy.includes("spending_budget"));
+    assert.equal(outcome.preview.overSpending, "50");
+  });
+
+  it("keeps review required when the per-payment limit is missing", async () => {
+    const outcome = await runSimulation({ ...values, maxPaymentUsdc: "" }, invoke);
+
+    assert.equal(outcome.status, "ok");
+    assert.equal(outcome.decision, "review_required");
+    assert.ok(outcome.policy.reviewReasons.includes("per_payment_limit"));
+  });
+
+  it("never creates a payment proposal during a simulation", async () => {
+    const calls = [];
+    const tracked = async (name, args) => {
+      calls.push(name);
+      return invoke(name, args);
+    };
+    await runSimulation(values, tracked);
+
+    assert.deepEqual(calls, ["plan_stablecoin_allocation", "check_payment_policy"]);
+    assert.equal(calls.includes("propose_usdc_payment"), false);
+  });
+});
+
 describe("static shell", () => {
   it("serves the app shell and its modules", async () => {
     const page = await get("/");
@@ -301,7 +361,7 @@ describe("static shell", () => {
     assert.match(page.type, /text\/html/);
     assert.match(page.body, /StablePilot/);
 
-    for (const path of ["/app.js", "/styles.css", "/components.css", "/views/planner.js"]) {
+    for (const path of ["/app.js", "/styles.css", "/components.css", "/views/planner.js", "/views/simulator.js", "/lib/simulate.js"]) {
       const file = await get(path);
       assert.equal(file.status, 200, `${path} should be served`);
     }

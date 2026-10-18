@@ -1,4 +1,4 @@
-// Router and shell behaviour. Six routes, no build step: the browser loads the
+// Router and shell behaviour. Seven routes, no build step: the browser loads the
 // modules directly, and the backend serves this directory.
 
 import { health } from "./lib/api.js";
@@ -10,11 +10,13 @@ import * as overview from "./views/overview.js";
 import * as planner from "./views/planner.js";
 import * as proposals from "./views/proposals.js";
 import * as settings from "./views/settings.js";
+import * as simulator from "./views/simulator.js";
 
 const routes = {
   "/": { title: "Overview", view: overview },
   "/planner": { title: "Allocation Planner", view: planner },
   "/checker": { title: "Payment Checker", view: checker },
+  "/simulator": { title: "What-If Simulator", view: simulator },
   "/proposals": { title: "Payment Proposals", view: proposals },
   "/activity": { title: "Activity History", view: activity },
   "/settings": { title: "Settings", view: settings },
